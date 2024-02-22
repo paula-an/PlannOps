@@ -3,6 +3,7 @@ from powersystem import PowerSystemData
 import pyomo.environ as pyo
 import numpy as np
 from funcs.funcs import print_pyovar, print_centered_text
+import sys
 
 class OptimizationProblem(ABC):
     
@@ -53,12 +54,6 @@ class OPFBasic(OptimizationProblem):
         solver = pyo.SolverFactory('glpk')
         solver.solve(self.model)
     
-    def get_results(self, export=True, display=True) -> None:
-        if export:
-            self._export_results()
-        if display:
-            self._display_results()
-    
     def _bounds_pf(self, _, k: int) -> tuple:
         return (-self.psd.ebranch.flow_max[k], +self.psd.ebranch.flow_max[k])
     
@@ -89,9 +84,9 @@ class OPFBasic(OptimizationProblem):
         return self._pg_inj(b)-self._pf_inj(b)+self._sl_inj(b) == self.psd.bus.pd_max[b]
     
     def _rule_power_flow(self, _, k) -> pyo.Expression:
-        i = self.psd.ebranch.bus_fr[k]
-        j = self.psd.ebranch.bus_to[k]
-        return self.model.pf[k] == self.psd.ebranch.b[k]*(self.model.th[i]-self.model.th[j])
+        ki = self.psd.ebranch.bus_fr[k]
+        kj = self.psd.ebranch.bus_to[k]
+        return self.model.pf[k] == self.psd.ebranch.b[k]*(self.model.th[ki]-self.model.th[kj])
     
     def _sl_inj(self, b):
         if b in self.psd.bus.set_with_demand:
@@ -104,54 +99,55 @@ class OPFBasic(OptimizationProblem):
     def _total_sl_cost(self) -> pyo.Expression:
         return sum([self.psd.bus.sl_cost*self.model.sl[b] for b in self.psd.bus.set_with_demand])
     
-    def _display_results(self) -> None:
-        print("\n\n-------Results-------\n\n")
+    def get_results(self, export=True, display=True, file_name="results.txt") -> None:
+        with open(file_name, "w") as file:
+            for idx, out in enumerate([sys.stdout, file]):
+                if idx == 0 and not display:
+                    continue
+                if idx == 1 and not export:
+                    continue
+                print("-----------------------------------------", file=out)
+                print("-----------------Results-----------------", file=out)
+                print("-----------------------------------------", file=out)
 
-        print_pyovar(title="Active Power Generation:", 
-                    var=self.model.pg,
-                    set=self.psd.gen.set_all)
-        
-        print_pyovar(title="Load Shedding:", 
-                    var=self.model.sl,
-                    set=self.psd.bus.set_with_demand)
-        
-        print_pyovar(title="Active Power Flow:", 
-                    var=self.model.pf,
-                    set=self.psd.ebranch.set_all)
-        
-        print_pyovar(title="Angles:", 
-                    var=self.model.th,
-                    set=self.psd.bus.set_all)
+                print("\n\n", file=out)
+                print_centered_text("Bus data", file=out, total_length=6+3*9)
+                print("{:>6}{:>9}{:>9}{:>9}".format("Bus", "pg", "LShed", "Angle"), file=out)
+                for b in self.psd.bus.set_all:
+                    bus = self._int_format(b+1)
+                    gen = self._float_format(self._pg_inj(b))
+                    lshed = self._float_format(self._sl_inj(b))
+                    angle = self._float_format(self.model.th[b])
+                    print(bus + gen + lshed + angle, file=out)
+                
+                print("\n\n", file=out)
+                print_centered_text("Existent branch data", file=out, total_length=3*6+9)
+                print("{:>6}{:>6}{:>6}{:>9}".format("Branch", "fr", "to", "pflow"), file=out)
+                for k in self.psd.ebranch.set_all:
+                    branch = self._int_format(k+1)
+                    fr = self._int_format(self.psd.ebranch.bus_fr[k]+1)
+                    to = self._int_format(self.psd.ebranch.bus_to[k]+1)
+                    pflow = self._float_format(self.model.pf[k])
+                    print(branch + fr + to + pflow, file=out)
+                
+                print("\n\n", file=out)
+                print_centered_text("Generation data", file=out, total_length=2*6+2*9)
+                print("{:>6}{:>6}{:>9}{:>9}".format("Gen", "Bus", "pg", "cost"), file=out)
+                for g in self.psd.gen.set_all:
+                    gen = self._int_format(g+1)
+                    bus = self._int_format(self.psd.gen.bus[g]+1)
+                    pg = self._float_format(self.model.pg[g])
+                    cost = self._float_format(self.model.pg[g]*self.psd.gen.cost[g])
+                    print(gen + bus + pg + cost, file=out)
 
-        print("\nObjective:")
-        print(pyo.value(self.model.obj))
+                print("\nObjective:", file=out)
+                print(pyo.value(self.model.obj), file=out)
 
-        print("\nTotal Power generation cost")
-        print(pyo.value(self._total_pg_cost()))
+                print("\nTotal Power generation cost:", file=out)
+                print(pyo.value(self._total_pg_cost()), file=out)
 
-        print("\nTotal Load shedding cost")
-        print(pyo.value(self._total_sl_cost()))
-    
-    def _export_results(self) -> None:
-        with open("results.txt", "w") as file:
-            print_centered_text("Bus data", file=file, total_length=6+3*9)
-            print("{:>6}{:>9}{:>9}{:>9}".format("Bus", "Gen", "LShed", "Angle"), file=file)
-            for b in self.psd.bus.set_all:
-                bus = self._int_format(b+1)
-                gen = self._float_format(self._pg_inj(b))
-                lshed = self._float_format(self._sl_inj(b))
-                angle = self._float_format(self.model.th[b])
-                print(bus + gen + lshed + angle, file=file)
-            
-            print("\n\n", file=file)
-            print_centered_text("Existent branch data", file=file, total_length=3*6+9)
-            print("{:>6}{:>6}{:>6}{:>9}".format("Branch", "fr", "to", "pflow"), file=file)
-            for k in self.psd.ebranch.set_all:
-                branch = self._int_format(k+1)
-                fr = self._int_format(self.psd.ebranch.bus_fr[k]+1)
-                to = self._int_format(self.psd.ebranch.bus_to[k]+1)
-                pflow = self._float_format(self.model.pf[k])
-                print(branch + fr + to + pflow, file=file)
+                print("\nTotal Load shedding cost:", file=out)
+                print(pyo.value(self._total_sl_cost()), file=out)
 
     def _float_format(self, number: float) -> None:
         return "{:>9.4f}".format(pyo.value(number))
