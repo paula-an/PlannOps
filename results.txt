@@ -4,25 +4,25 @@
 
 
 
-------------Bus data-------------
-   Bus       pg    LShed    Angle
-     1   1.0000   0.0000   0.0000
-     2   0.0000   1.0000   0.0133
-     3   0.0000  -0.0000   0.0267
+--------------Bus data--------------
+      Bus       pg    LShed    Angle
+        1   1.0000   0.0000   0.0000
+        2   0.0000   1.0000   0.0133
+        3   0.0000  -0.0000   0.0267
 
 
 
----Existent branch data----
-Branch    fr    to    pflow
-     1     1     2   0.3333
-     2     1     3   0.6667
-     3     2     3   0.3333
+--------Existent branch data--------
+   Branch       fr       to    pflow
+        1        1        2   0.3333
+        2        1        3   0.6667
+        3        2        3   0.3333
 
 
 
--------Generation data--------
-   Gen   Bus       pg     cost
-     1     1   1.0000  59.9200
+----------Generation data-----------
+      Gen      Bus       pg     cost
+        1        1   1.0000  59.9200
 
 Objective:
 6051.919999999999

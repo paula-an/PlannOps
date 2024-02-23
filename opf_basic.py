@@ -1,23 +1,10 @@
-from abc import abstractmethod, ABC
+from readsystems import read_from_MATPOWER
 from powersystem import PowerSystemData
+from abc_classes.optimization import OptimizationProblem
 import pyomo.environ as pyo
 import numpy as np
-from funcs.funcs import print_pyovar, print_centered_text
+from funcs.printing import print_centered_text, int_format, float_format, table_format
 import sys
-
-class OptimizationProblem(ABC):
-    
-    @abstractmethod
-    def define_model(self):
-        ...
-
-    @abstractmethod
-    def solve_model(self):
-        ...
-
-    @abstractmethod
-    def get_results(self):
-        ...
 
 class OPFBasic(OptimizationProblem):
 
@@ -111,33 +98,36 @@ class OPFBasic(OptimizationProblem):
                 print("-----------------------------------------", file=out)
 
                 print("\n\n", file=out)
-                print_centered_text("Bus data", file=out, total_length=6+3*9)
-                print("{:>6}{:>9}{:>9}{:>9}".format("Bus", "pg", "LShed", "Angle"), file=out)
+                ncol = 4
+                print_centered_text("Bus data", file=out, ncol=ncol)
+                print(table_format(ncol=ncol).format("Bus", "pg", "LShed", "Angle"), file=out)
                 for b in self.psd.bus.set_all:
-                    bus = self._int_format(b+1)
-                    gen = self._float_format(self._pg_inj(b))
-                    lshed = self._float_format(self._sl_inj(b))
-                    angle = self._float_format(self.model.th[b])
+                    bus = int_format(b+1)
+                    gen = float_format(self._pg_inj(b))
+                    lshed = float_format(self._sl_inj(b))
+                    angle = float_format(self.model.th[b])
                     print(bus + gen + lshed + angle, file=out)
                 
                 print("\n\n", file=out)
-                print_centered_text("Existent branch data", file=out, total_length=3*6+9)
-                print("{:>6}{:>6}{:>6}{:>9}".format("Branch", "fr", "to", "pflow"), file=out)
+                ncol = 4
+                print_centered_text("Existent branch data", file=out, ncol=ncol)
+                print(table_format(ncol=ncol).format("Branch", "fr", "to", "pflow"), file=out)
                 for k in self.psd.ebranch.set_all:
-                    branch = self._int_format(k+1)
-                    fr = self._int_format(self.psd.ebranch.bus_fr[k]+1)
-                    to = self._int_format(self.psd.ebranch.bus_to[k]+1)
-                    pflow = self._float_format(self.model.pf[k])
+                    branch = int_format(k+1)
+                    fr = int_format(self.psd.ebranch.bus_fr[k]+1)
+                    to = int_format(self.psd.ebranch.bus_to[k]+1)
+                    pflow = float_format(self.model.pf[k])
                     print(branch + fr + to + pflow, file=out)
                 
                 print("\n\n", file=out)
-                print_centered_text("Generation data", file=out, total_length=2*6+2*9)
-                print("{:>6}{:>6}{:>9}{:>9}".format("Gen", "Bus", "pg", "cost"), file=out)
+                ncol = 4
+                print_centered_text("Generation data", file=out, ncol=ncol)
+                print(table_format(ncol=ncol).format("Gen", "Bus", "pg", "cost"), file=out)
                 for g in self.psd.gen.set_all:
-                    gen = self._int_format(g+1)
-                    bus = self._int_format(self.psd.gen.bus[g]+1)
-                    pg = self._float_format(self.model.pg[g])
-                    cost = self._float_format(self.model.pg[g]*self.psd.gen.cost[g])
+                    gen = int_format(g+1)
+                    bus = int_format(self.psd.gen.bus[g]+1)
+                    pg = float_format(self.model.pg[g])
+                    cost = float_format(self.model.pg[g]*self.psd.gen.cost[g])
                     print(gen + bus + pg + cost, file=out)
 
                 print("\nObjective:", file=out)
@@ -149,8 +139,14 @@ class OPFBasic(OptimizationProblem):
                 print("\nTotal Load shedding cost:", file=out)
                 print(pyo.value(self._total_sl_cost()), file=out)
 
-    def _float_format(self, number: float) -> None:
-        return "{:>9.4f}".format(pyo.value(number))
+def main():
+    file_name = "dataMATPOWER/case3.m"
+    system_data = read_from_MATPOWER(file_name)
+    psd = PowerSystemData(system_data=system_data)
+    op = OPFBasic(psd)
+    op.define_model(debug=True)
+    op.solve_model()
+    op.get_results()
 
-    def _int_format(self, number: int) -> None:
-        return "{:>6}".format(number)
+if __name__ == "__main__":
+    main()
