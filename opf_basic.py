@@ -1,9 +1,9 @@
-from readsystems import read_from_MATPOWER
-from powersystem import PowerSystemData
+from basics.readsystems import read_from_MATPOWER
+from basics.powersystem import PowerSystemData
 from abc_classes.optimization import OptimizationProblem
 import pyomo.environ as pyo
 import numpy as np
-from funcs.printing import print_centered_text, int_format, float_format, table_format
+from basics.printing import print_centered_text, int_format, float_format, table_format
 import sys
 
 class OPFBasic(OptimizationProblem):
@@ -11,6 +11,8 @@ class OPFBasic(OptimizationProblem):
     def __init__(self, psd: PowerSystemData) -> None:
         # PowerSystemData injection
         self.psd = psd
+        
+        self.losses = np.zeros(self.psd.ebranch.len)
     
     def define_model(self, debug: bool = False):
         # Model
@@ -53,7 +55,7 @@ class OPFBasic(OptimizationProblem):
     def _create_objective(self) -> pyo.Expression:
         return self._total_pg_cost()+self._total_sl_cost()
     
-    def _pf_inj(self, b) -> pyo.Expression:
+    def _pf_inj(self, b: int) -> pyo.Expression:
         pf_inj = 0
         for k in np.where(self.psd.ebranch.bus_fr == b)[0]:
             pf_inj += self.model.pf[k]
@@ -61,21 +63,21 @@ class OPFBasic(OptimizationProblem):
             pf_inj -= self.model.pf[k]
         return pf_inj
     
-    def _pg_inj(self, b) -> pyo.Expression:
+    def _pg_inj(self, b: int) -> pyo.Expression:
         pg_inj = 0
         for g in np.where(self.psd.gen.bus == b)[0]:
             pg_inj += self.model.pg[g]
         return pg_inj
     
-    def _rule_power_balance(self, _, b) -> pyo.Expression:
+    def _rule_power_balance(self, _, b: int) -> pyo.Expression:
         return self._pg_inj(b)-self._pf_inj(b)+self._sl_inj(b) == self.psd.bus.pd_max[b]
     
-    def _rule_power_flow(self, _, k) -> pyo.Expression:
+    def _rule_power_flow(self, _, k: int) -> pyo.Expression:
         ki = self.psd.ebranch.bus_fr[k]
         kj = self.psd.ebranch.bus_to[k]
-        return self.model.pf[k] == self.psd.ebranch.b[k]*(self.model.th[ki]-self.model.th[kj])
+        return self.model.pf[k] == self.psd.ebranch.b_lin[k]*(self.model.th[ki]-self.model.th[kj])
     
-    def _sl_inj(self, b):
+    def _sl_inj(self, b: int):
         if b in self.psd.bus.set_with_demand:
             return self.model.sl[b]
         return 0
@@ -86,7 +88,7 @@ class OPFBasic(OptimizationProblem):
     def _total_sl_cost(self) -> pyo.Expression:
         return sum([self.psd.bus.sl_cost*self.model.sl[b] for b in self.psd.bus.set_with_demand])
     
-    def get_results(self, export=True, display=True, file_name="results.txt") -> None:
+    def get_results(self, export: bool=True, display: bool=True, file_name: str="results.txt") -> None:
         with open(file_name, "w") as file:
             for idx, out in enumerate([sys.stdout, file]):
                 if idx == 0 and not display:
@@ -109,15 +111,16 @@ class OPFBasic(OptimizationProblem):
                     print(bus + gen + lshed + angle, file=out)
                 
                 print("\n\n", file=out)
-                ncol = 4
+                ncol = 5
                 print_centered_text("Existent branch data", file=out, ncol=ncol)
-                print(table_format(ncol=ncol).format("Branch", "fr", "to", "pflow"), file=out)
+                print(table_format(ncol=ncol).format("Branch", "fr", "to", "pflow", "losses"), file=out)
                 for k in self.psd.ebranch.set_all:
                     branch = int_format(k+1)
                     fr = int_format(self.psd.ebranch.bus_fr[k]+1)
                     to = int_format(self.psd.ebranch.bus_to[k]+1)
                     pflow = float_format(self.model.pf[k])
-                    print(branch + fr + to + pflow, file=out)
+                    losses = float_format(self.losses[k])
+                    print(branch + fr + to + pflow + losses, file=out)
                 
                 print("\n\n", file=out)
                 ncol = 4

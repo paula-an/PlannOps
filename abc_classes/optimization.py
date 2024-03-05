@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from powersystem import PowerSystemData
+from basics.powersystem import PowerSystemData
 
 class OptimizationProblem(ABC):
     
@@ -13,4 +13,8 @@ class OptimizationProblem(ABC):
 
     @abstractmethod
     def solve_model(self):
+        ...
+
+    @abstractmethod
+    def get_results(self, export: bool=True, display: bool=True, file_name: str="results.txt") -> None:
         ...

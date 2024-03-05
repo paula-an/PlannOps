@@ -25,3 +25,9 @@ def int_format(number: int) -> str:
 
 def table_format(ncol: int) -> str:
     return ncol*"{:>9}"
+
+def pyo_extract(var: pyo.Var, set: np.ndarray) -> np.ndarray:
+    array = np.zeros_like(var)
+    for idx in set:
+        array[idx] = pyo.value(var[idx])
+    return array

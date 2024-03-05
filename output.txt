@@ -28,9 +28,9 @@
         Key : Lower : Value : Upper : Fixed : Stale : Domain
           0 :     0 :  None :   1.0 : False :  True :  Reals
     sl : Size=2, Index=sl_index
-        Key : Lower : Value : Upper : Fixed : Stale : Domain
-          1 :     0 :  None :   1.0 : False :  True :  Reals
-          2 :     0 :  None :   1.0 : False :  True :  Reals
+        Key : Lower : Value : Upper              : Fixed : Stale : Domain
+          1 :     0 :  None : 1.0013037742871367 : False :  True :  Reals
+          2 :     0 :  None : 1.0005215097148548 : False :  True :  Reals
     th : Size=3, Index=th_index
         Key : Lower              : Value : Upper             : Fixed : Stale : Domain
           0 : -3.141592653589793 :     0 : 3.141592653589793 :  True : False :  Reals
@@ -44,10 +44,10 @@
 
 2 Constraint Declarations
     con_power_balance : Size=3, Index=con_power_balance_index, Active=True
-        Key : Lower : Body                        : Upper : Active
-          0 :   0.0 :     pg[0] - (pf[0] + pf[1]) :   0.0 :   True
-          1 :   1.0 :   - (pf[2] - pf[0]) + sl[1] :   1.0 :   True
-          2 :   1.0 : - (- pf[1] - pf[2]) + sl[2] :   1.0 :   True
+        Key : Lower                 : Body                        : Upper                 : Active
+          0 : 0.0013037742871366339 :     pg[0] - (pf[0] + pf[1]) : 0.0013037742871366339 :   True
+          1 :    1.0013037742871367 :   - (pf[2] - pf[0]) + sl[1] :    1.0013037742871367 :   True
+          2 :    1.0005215097148548 : - (- pf[1] - pf[2]) + sl[2] :    1.0005215097148548 :   True
     con_power_flow : Size=3, Index=con_power_flow_index, Active=True
         Key : Lower : Body                         : Upper : Active
           0 :   0.0 : pf[0] + 25.0*(th[0] - th[1]) :   0.0 :   True

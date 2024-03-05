@@ -54,6 +54,7 @@ class ExistentBranchData:
         deno = self.r**2+self.x**2
         self.g = +self.r/deno
         self.b = -self.x/deno
+        self.b_lin = -1/self.x
 
         # Max apparent power flow
         self.flow_max_MW = system_data["branch"][:, 5]
@@ -73,6 +74,12 @@ class ExistentBranchData:
         raise NotImplementedError()
     
     def delete(self):
+        raise NotImplementedError()
+    
+    def line_down(self, k: int):
+        raise NotImplementedError()
+    
+    def line_up(self, k: int):
         raise NotImplementedError()
 
 
