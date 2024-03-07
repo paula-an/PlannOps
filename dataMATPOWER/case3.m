@@ -35,9 +35,9 @@ mpc.gen = [
 %% branch data
 %	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
 mpc.branch = [
-	1	2	0.01	0.04	0.01	100	100	100	0	0	1	-360	360;
-	1	3	0.01	0.04	0.01	100	100	100	0	0	1	-360	360;
-	2	3	0.01	0.04	0.01	100	100	100	0	0	1	-360	360;
+	1	2	0.02	0.04	0.01	100	100	100	0	0	1	-360	360;
+	1	3	0.02	0.04	0.01	100	100	100	0	0	1	-360	360;
+	2	3	0.02	0.04	0.01	100	100	100	0	0	1	-360	360;
 ];
 
 %%-----  OPF Data  -----%%
@@ -45,10 +45,10 @@ mpc.branch = [
 %type    cinv    cope  carbon    ramp    serie
 %       ($/kW) ($/MWh)(ton/MWh) (%cap)
 mpc.gencost = [
-	1	3000      36    0.92      45       0;  %  coal 
-	2	3000      28       0      45       0;  %  Nuclear;
-	3	3000      41    0.51      45       0;  %  gas
-	4	1150      10       0     100       1;  %  wind
+	1	3000      36    0.92      45       -1;  %  coal 
+	2	3000      28       0      45       -1;  %  Nuclear;
+	3	3000      41    0.51      45       -1;  %  gas
+	4	1150      10       0     100        1;  %  wind
 ];
 
 %% Co2tax

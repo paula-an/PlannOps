@@ -4,7 +4,8 @@ class PowerSystemData:
     """Class to construct Power System Raw Data"""
     def __init__(self,
                  system_data: np.ndarray,
-                 power_base: float = 100) -> None:
+                 power_base: float = 100,
+                 sce_file: str = None) -> None:
         self.power_base = power_base
         self.bus = BusData(system_data, power_base)
         self.ebranch = ExistentBranchData(system_data, power_base)
@@ -12,6 +13,10 @@ class PowerSystemData:
 
         # Load Sheding cost
         self.bus.sl_cost = 100*max(self.gen.cost)
+
+        # Scenario
+        if sce_file is not None:
+            self.sce = ScenariosData(sce_file)
 
 
 class BusData:
@@ -31,13 +36,19 @@ class BusData:
         self.len = len(self.type)
         self.set_all = np.arange(self.len)
         self.set_with_demand = np.where(self.pd_max > 0)[0]
+        self.len_with_demand = len(self.set_with_demand)
     
-    def set_new(self):
+    def new(self):
         raise NotImplementedError()
     
     def delete(self):
         raise NotImplementedError()
+    
+    def define_all_as_demand(self):
+        self.set_with_demand = np.copy(self.set_all)
 
+    def define_all_areas_as_zero(self):
+        self.area = np.zeros_like(self.area)
 
 class ExistentBranchData:
     """Class to load existent branch data"""
@@ -70,16 +81,16 @@ class ExistentBranchData:
         self.len = len(self.bus_fr)
         self.set_all = np.arange(self.len)
     
-    def set_new(self):
+    def new(self):
         raise NotImplementedError()
     
     def delete(self):
         raise NotImplementedError()
     
-    def line_down(self, k: int):
+    def down(self, k: int):
         raise NotImplementedError()
     
-    def line_up(self, k: int):
+    def up(self, k: int):
         raise NotImplementedError()
 
 
@@ -121,3 +132,12 @@ class GeneratorsData:
     
     def delete(self):
         raise NotImplementedError()
+    
+class ScenariosData:
+    def __init__(self, file) -> None:
+        self.data = np.genfromtxt(file, delimiter=",")
+
+        # Misc
+        (self.len_obs, self.len_series) = np.shape(self.data)
+        self.set_obs = np.arange(self.len_obs)
+        self.set_series = np.arange(self.len_series)

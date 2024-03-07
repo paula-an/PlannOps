@@ -2,10 +2,10 @@ import re
 import numpy as np
 
 
-def read_from_MATPOWER(file_name: str) -> dict:
+def read_from_MATPOWER(data_file: str) -> dict:
     matrices = {}  # Dictionary to store the matrices
 
-    with open(file_name, 'r') as file:
+    with open(data_file, 'r') as file:
         content = file.read()
 
         # Find all parts within line comments

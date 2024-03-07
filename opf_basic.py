@@ -1,3 +1,5 @@
+# Created in 05/03/2024 by Arthur
+
 from basics.readsystems import read_from_MATPOWER
 from basics.powersystem import PowerSystemData
 from abc_classes.optimization import OptimizationProblem
@@ -17,6 +19,9 @@ class OPFBasic(OptimizationProblem):
     def define_model(self, debug: bool = False):
         # Model
         self.model = pyo.ConcreteModel(name=self.__class__.__name__)
+
+        # Mutable Parameters
+        self.model.bus_pd_max = pyo.Param(self.psd.bus.set_all, initialize=self.psd.bus.pd_max, mutable=True)
 
         # Variables
         self.model.pg = pyo.Var(self.psd.gen.set_all, within=pyo.Reals, bounds=self._bounds_pg)  # Power Generation
@@ -50,7 +55,7 @@ class OPFBasic(OptimizationProblem):
         return (0, self.psd.gen.pg_max[g])
     
     def _bounds_sl(self, _, b: int) -> tuple:
-        return (0, self.psd.bus.pd_max[b])
+        return (0, self.model.bus_pd_max[b])
     
     def _create_objective(self) -> pyo.Expression:
         return self._total_pg_cost()+self._total_sl_cost()
@@ -70,7 +75,7 @@ class OPFBasic(OptimizationProblem):
         return pg_inj
     
     def _rule_power_balance(self, _, b: int) -> pyo.Expression:
-        return self._pg_inj(b)-self._pf_inj(b)+self._sl_inj(b) == self.psd.bus.pd_max[b]
+        return self._pg_inj(b)-self._pf_inj(b)+self._sl_inj(b) == self.model.bus_pd_max[b]
     
     def _rule_power_flow(self, _, k: int) -> pyo.Expression:
         ki = self.psd.ebranch.bus_fr[k]
@@ -143,8 +148,8 @@ class OPFBasic(OptimizationProblem):
                 print(pyo.value(self._total_sl_cost()), file=out)
 
 def main():
-    file_name = "dataMATPOWER/case3.m"
-    system_data = read_from_MATPOWER(file_name)
+    data_file = "dataMATPOWER/case3.m"
+    system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasic(psd)
     op.define_model(debug=True)
@@ -153,3 +158,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+        

@@ -15,36 +15,46 @@ class OPFBasicLoss(OPFBasic):
 
         self.pd_max0 = np.copy(self.psd.bus.pd_max)
 
+        # For this class, all buses have demand
+        self.psd.bus.define_all_as_demand()
+
     def solve_model(self) -> None:
         for iter in range(self.MAX_ITER):
             print("... iter:", iter+1)
             
             super().solve_model()
 
-            # Adding losses to demands
-            self.pd_max_old = np.copy(self.psd.bus.pd_max)
-            self.psd.bus.pd_max = np.copy(self.pd_max0)
+            self._update_pd_max()
 
-            th = pyo_extract(self.model.th, self.psd.bus.set_all)
-            for k in self.psd.ebranch.set_all:
-                
-                ki = self.psd.ebranch.bus_fr[k]
-                kj = self.psd.ebranch.bus_to[k]
-                self.losses[k] = 0.5 * self.psd.ebranch.g[k]*(th[ki]-th[kj])**2
-
-                self.psd.bus.pd_max[ki] += 0.5*self.losses[k]
-                self.psd.bus.pd_max[kj] += 0.5*self.losses[k]
-
-            # Stop criterion
-            if np.sum((self.psd.bus.pd_max-self.pd_max_old)**2) < self.TOL:
+            if self._stop_criterion():
                 return
 
-            self.define_model(debug=True)  # It can be optimized
+            # with open('output.txt', 'w') as file:
+            #     self.model.pprint(ostream=file)
 
+    def _update_pd_max(self) -> None:
+        self.pd_max_old = np.copy(self.psd.bus.pd_max)
+        self.psd.bus.pd_max = np.copy(self.pd_max0)
 
-def main():
-    file_name = "dataMATPOWER/case3.m"
-    system_data = read_from_MATPOWER(file_name)
+        th = pyo_extract(self.model.th, self.psd.bus.set_all)
+        for k in self.psd.ebranch.set_all:
+            
+            ki = self.psd.ebranch.bus_fr[k]
+            kj = self.psd.ebranch.bus_to[k]
+            self.losses[k] = 0.5 * self.psd.ebranch.g[k]*(th[ki]-th[kj])**2
+
+            self.psd.bus.pd_max[ki] += 0.5*self.losses[k]
+            self.psd.bus.pd_max[kj] += 0.5*self.losses[k]
+        
+        for b in self.psd.bus.set_all:
+            self.model.bus_pd_max[b] = self.psd.bus.pd_max[b]
+
+    def _stop_criterion(self) -> bool:
+        return np.sum((self.psd.bus.pd_max-self.pd_max_old)**2) < self.TOL
+
+def main() -> None:
+    data_file = "dataMATPOWER/case3.m"
+    system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasicLoss(psd)
     op.define_model(debug=True)
