@@ -49,20 +49,20 @@ class PowerSystemData:
                     
     
     def create_dumb_line(self, bus_fr: int, bus_to: int) -> None:
-        np.concatenate((self.ebranch.bus_fr, bus_fr))
-        np.concatenate((self.ebranch.bus_to, bus_to))
-        np.concatenate((self.ebranch.r, 0))
-        np.concatenate((self.ebranch.x, 1/self.ebranch.b_dumb))
-        np.concatenate((self.ebranch.b_shunt, 0))
-        np.concatenate((self.ebranch.g, 0))
-        np.concatenate((self.ebranch.b, self.ebranch.b_dumb))
-        np.concatenate((self.ebranch.b_lin, self.ebranch.b_dumb))
-        np.concatenate((self.unlimited_branches, 0))
-        np.concatenate((self.ebranch.flow_max_MW, 0))
-        np.concatenate((self.ebranch.flow_max, self.ebranch.flow_max_dumb))
-        np.concatenate((self.ebranch.tap, 1))
-        np.concatenate((self.ebranch.set_all, self.ebranch.len))
-        self.len += 1
+        self.ebranch.bus_fr = np.append(self.ebranch.bus_fr, bus_fr)
+        self.ebranch.bus_to = np.append(self.ebranch.bus_to, bus_to)
+        self.ebranch.r = np.append(self.ebranch.r, 0)
+        self.ebranch.x = np.append(self.ebranch.x, 1/self.ebranch.b_dumb)
+        self.ebranch.b_shunt = np.append(self.ebranch.b_shunt, 0)
+        self.ebranch.g = np.append(self.ebranch.g, 0)
+        self.ebranch.b = np.append(self.ebranch.b, self.ebranch.b_dumb)
+        self.ebranch.b_lin = np.append(self.ebranch.b_lin, self.ebranch.b_dumb)
+        self.ebranch.unlimited_branches = np.append(self.ebranch.unlimited_branches, False)
+        self.ebranch.flow_max_MW = np.append(self.ebranch.flow_max_MW, 0)
+        self.ebranch.flow_max = np.append(self.ebranch.flow_max, self.ebranch.flow_max_dumb)
+        self.ebranch.tap = np.append(self.ebranch.tap, 1)
+        self.ebranch.set_all = np.append(self.ebranch.set_all, self.ebranch.len)
+        self.ebranch.len += 1
 
 
 class BusData:
@@ -127,7 +127,8 @@ class BranchData:
 
         # Max apparent power flow
         self.flow_max_MW = system_data[data_key][:, 5][self.unique_lines] * self.nlines
-        self.unlimited_branches = np.where(self.flow_max_MW==0)[0]
+        self.unlimited_branches = np.zeros(self.len, dtype=bool)
+        self.unlimited_branches[np.where(self.flow_max_MW==0)[0]] = True
         self.flow_max_MW[self.unlimited_branches] = 99999
         self.flow_max = self.flow_max_MW/power_base
 
