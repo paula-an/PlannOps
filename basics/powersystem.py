@@ -5,10 +5,19 @@ class PowerSystemData:
     def __init__(self,
                  system_data: np.ndarray,
                  power_base: float = 100,
+                 max_ang_opening: float = 4*np.pi,
                  sce_file: str = None) -> None:
         self.power_base = power_base
+        self.max_ang_opening = max_ang_opening
         self.bus = BusData(system_data, power_base)
-        self.ebranch = ExistentBranchData(system_data, power_base)
+        self.ebranch = BranchData(system_data=system_data,
+                                  data_key="branch",
+                                  power_base=power_base,
+                                  max_ang_opening=max_ang_opening)
+        self.xbranch = BranchData(system_data=system_data,
+                                  data_key="xbranch",
+                                  power_base=power_base,
+                                  max_ang_opening=max_ang_opening)
         self.gen = GeneratorsData(system_data, power_base)
 
         # Load Sheding cost
@@ -17,6 +26,43 @@ class PowerSystemData:
         # Scenario
         if sce_file is not None:
             self.sce = ScenariosData(sce_file)
+
+        self.find_isolated_buses()
+        if np.any(self.bus.is_isolated):
+            self.create_dumb_grid()
+            self.find_isolated_buses()
+            if np.any(self.bus.is_isolated):
+                raise UserWarning("Buses {} are impossible to be connected!!!".format(np.where(self.bus.is_isolated)[0]))
+        
+    def find_isolated_buses(self) -> None:
+        for b in np.where(self.bus.is_isolated)[0]:
+            for k in self.ebranch.set_all:
+                if b in {self.ebranch.bus_fr[k], self.ebranch.bus_to[k]}:
+                    self.bus.is_isolated[b] = False
+                    break
+    
+    def create_dumb_grid(self) -> None:
+        for b in np.where(self.bus.is_isolated)[0]:
+            for k in self.xbranch.set_all:
+                if b in {self.xbranch.bus_fr[k], self.xbranch.bus_to[k]}:
+                    self.create_dumb_line(self.xbranch.bus_fr[k], self.xbranch.bus_to[k])
+                    
+    
+    def create_dumb_line(self, bus_fr: int, bus_to: int) -> None:
+        np.concatenate((self.ebranch.bus_fr, bus_fr))
+        np.concatenate((self.ebranch.bus_to, bus_to))
+        np.concatenate((self.ebranch.r, 0))
+        np.concatenate((self.ebranch.x, 1/self.ebranch.b_dumb))
+        np.concatenate((self.ebranch.b_shunt, 0))
+        np.concatenate((self.ebranch.g, 0))
+        np.concatenate((self.ebranch.b, self.ebranch.b_dumb))
+        np.concatenate((self.ebranch.b_lin, self.ebranch.b_dumb))
+        np.concatenate((self.unlimited_branches, 0))
+        np.concatenate((self.ebranch.flow_max_MW, 0))
+        np.concatenate((self.ebranch.flow_max, self.ebranch.flow_max_dumb))
+        np.concatenate((self.ebranch.tap, 1))
+        np.concatenate((self.ebranch.set_all, self.ebranch.len))
+        self.len += 1
 
 
 class BusData:
@@ -37,6 +83,9 @@ class BusData:
         self.set_all = np.arange(self.len)
         self.set_with_demand = np.where(self.pd_max > 0)[0]
         self.len_with_demand = len(self.set_with_demand)
+
+        # Initializing isolated buses
+        self.is_isolated = np.ones(self.len, dtype=bool)
     
     def new(self):
         raise NotImplementedError()
@@ -50,16 +99,25 @@ class BusData:
     def define_all_areas_as_zero(self):
         self.area = np.zeros_like(self.area)
 
-class ExistentBranchData:
+class BranchData:
     """Class to load existent branch data"""
     def __init__(self,
                  system_data: np.ndarray,
-                 power_base: float) -> None:
-        self.bus_fr = system_data["branch"][:, 0].astype(int)-1  # From bus number
-        self.bus_to = system_data["branch"][:, 1].astype(int)-1  # To bus number
-        self.r = system_data["branch"][:, 2]  # Series resistance
-        self.x = system_data["branch"][:, 3]  # Series reactance
-        self.b_shunt = 0.5*system_data["branch"][:, 4]  # Susceptance shunt
+                 data_key: str,
+                 power_base: float,
+                 max_ang_opening: float) -> None:
+        self.bus_fr = system_data[data_key][:, 0].astype(int)-1  # From bus number
+        self.bus_to = system_data[data_key][:, 1].astype(int)-1  # To bus number
+
+        # Misc
+        self.len = len(self.bus_fr)
+        self.set_all = np.arange(self.len)
+
+        self._remove_repeated_lines()
+
+        self.r = system_data[data_key][:, 2][self.unique_lines] / self.nlines  # Series resistance
+        self.x = system_data[data_key][:, 3][self.unique_lines] / self.nlines  # Series reactance
+        self.b_shunt = 0.5*system_data[data_key][:, 4][self.unique_lines] * self.nlines  # Susceptance shunt
         
         # Calculating series condutance and susceptance
         deno = self.r**2+self.x**2
@@ -68,18 +126,30 @@ class ExistentBranchData:
         self.b_lin = -1/self.x
 
         # Max apparent power flow
-        self.flow_max_MW = system_data["branch"][:, 5]
+        self.flow_max_MW = system_data[data_key][:, 5][self.unique_lines] * self.nlines
         self.unlimited_branches = np.where(self.flow_max_MW==0)[0]
         self.flow_max_MW[self.unlimited_branches] = 99999
         self.flow_max = self.flow_max_MW/power_base
 
         # Transformers TAPs
-        self.tap = system_data["branch"][:, 8]
+        self.tap = system_data[data_key][:, 8][self.unique_lines]
         self.tap[np.where(self.tap == 0)] = 1
 
-        # Misc
-        self.len = len(self.bus_fr)
-        self.set_all = np.arange(self.len)
+        # Dumb lines
+        min_flow_max = min(self.flow_max)/100
+        self.b_dumb = min_flow_max/max_ang_opening
+        self.flow_max_dumb = 1.1*min_flow_max
+
+        # Maximum number of expansion lines
+        if data_key != "xbranch":
+            return
+        
+        if np.shape(system_data[data_key])[1] == 14:
+            self.invT_max = system_data[data_key][:, 13][self.unique_lines].astype(int)
+        else:
+            self.invT_max = 3*np.ones(self.len)
+        
+        del self.unique_lines
     
     def new(self):
         raise NotImplementedError()
@@ -92,6 +162,32 @@ class ExistentBranchData:
     
     def up(self, k: int):
         raise NotImplementedError()
+    
+    def _remove_repeated_lines(self) -> None:
+        # Finding unique lines
+        self.unique_lines = np.ones(self.len, dtype=bool)
+        self.nlines = np.ones(self.len, dtype=int)
+        for k1 in range(self.len):
+            fr1 = self.bus_fr[k1]
+            to1 = self.bus_to[k1]
+            if not self.unique_lines[k1]:
+                continue
+            for k2 in range(k1+1, self.len):
+                if self.bus_fr[k2] == fr1 and self.bus_to[k2] == to1:
+                    self.unique_lines[k2] = False
+                    self.nlines[k1] += 1
+        
+        if np.all(self.unique_lines):
+            return
+        
+        # Update attributes
+        self.bus_fr = self.bus_fr[self.unique_lines]
+        self.bus_to = self.bus_to[self.unique_lines]
+        self.nlines = self.nlines[self.unique_lines]
+
+        # Update misc
+        self.len = len(self.bus_fr)
+        self.set_all = np.arange(self.len)
 
 
 class GeneratorsData:

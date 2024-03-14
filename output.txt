@@ -1,19 +1,19 @@
 21 Set Declarations
     bus_pd_max_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain                                : Size : Members
-        None :     2 : bus_pd_max_index_0*bus_pd_max_index_1 :    6 : {(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)}
+        None :     2 : bus_pd_max_index_0*bus_pd_max_index_1 :    8 : {(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1)}
     bus_pd_max_index_0 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
-        None :     1 :    Any :    3 : {0, 1, 2}
+        None :     1 :    Any :    4 : {0, 1, 2, 3}
     bus_pd_max_index_1 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :    2 : {0, 1}
     con_power_balance_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain                                              : Size : Members
-        None :     2 : con_power_balance_index_0*con_power_balance_index_1 :    6 : {(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)}
+        None :     2 : con_power_balance_index_0*con_power_balance_index_1 :    8 : {(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1)}
     con_power_balance_index_0 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
-        None :     1 :    Any :    3 : {0, 1, 2}
+        None :     1 :    Any :    4 : {0, 1, 2, 3}
     con_power_balance_index_1 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :    2 : {0, 1}
@@ -46,25 +46,25 @@
         None :     1 :    Any :    2 : {0, 1}
     sl_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain                : Size : Members
-        None :     2 : sl_index_0*sl_index_1 :    4 : {(1, 0), (1, 1), (2, 0), (2, 1)}
+        None :     2 : sl_index_0*sl_index_1 :    6 : {(1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1)}
     sl_index_0 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
-        None :     1 :    Any :    2 : {1, 2}
+        None :     1 :    Any :    3 : {1, 2, 3}
     sl_index_1 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :    2 : {0, 1}
     th_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain                : Size : Members
-        None :     2 : th_index_0*th_index_1 :    6 : {(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)}
+        None :     2 : th_index_0*th_index_1 :    8 : {(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1)}
     th_index_0 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
-        None :     1 :    Any :    3 : {0, 1, 2}
+        None :     1 :    Any :    4 : {0, 1, 2, 3}
     th_index_1 : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :    2 : {0, 1}
 
 1 Param Declarations
-    bus_pd_max : Size=6, Index=bus_pd_max_index, Domain=Any, Default=None, Mutable=True
+    bus_pd_max : Size=8, Index=bus_pd_max_index, Domain=Any, Default=None, Mutable=True
         Key    : Value
         (0, 0) :   0.0
         (0, 1) :   0.0
@@ -72,12 +72,14 @@
         (1, 1) :   0.7
         (2, 0) :   1.0
         (2, 1) :   0.7
+        (3, 0) :   1.0
+        (3, 1) :   0.7
 
 4 Var Declarations
     pf : Size=6, Index=pf_index
         Key    : Lower : Value : Upper : Fixed : Stale : Domain
-        (0, 0) :  -1.0 :  None :   1.0 : False :  True :  Reals
-        (0, 1) :  -1.0 :  None :   1.0 : False :  True :  Reals
+        (0, 0) :  -2.0 :  None :   2.0 : False :  True :  Reals
+        (0, 1) :  -2.0 :  None :   2.0 : False :  True :  Reals
         (1, 0) :  -1.0 :  None :   1.0 : False :  True :  Reals
         (1, 1) :  -1.0 :  None :   1.0 : False :  True :  Reals
         (2, 0) :  -1.0 :  None :   1.0 : False :  True :  Reals
@@ -86,13 +88,15 @@
         Key    : Lower : Value : Upper : Fixed : Stale : Domain
         (0, 0) :     0 :  None :   1.0 : False :  True :  Reals
         (0, 1) :     0 :  None :   1.0 : False :  True :  Reals
-    sl : Size=4, Index=sl_index
+    sl : Size=6, Index=sl_index
         Key    : Lower : Value : Upper : Fixed : Stale : Domain
         (1, 0) :     0 :  None :   1.0 : False :  True :  Reals
         (1, 1) :     0 :  None :   0.7 : False :  True :  Reals
         (2, 0) :     0 :  None :   1.0 : False :  True :  Reals
         (2, 1) :     0 :  None :   0.7 : False :  True :  Reals
-    th : Size=6, Index=th_index
+        (3, 0) :     0 :  None :   1.0 : False :  True :  Reals
+        (3, 1) :     0 :  None :   0.7 : False :  True :  Reals
+    th : Size=8, Index=th_index
         Key    : Lower              : Value : Upper             : Fixed : Stale : Domain
         (0, 0) : -3.141592653589793 :     0 : 3.141592653589793 :  True : False :  Reals
         (0, 1) : -3.141592653589793 :     0 : 3.141592653589793 :  True : False :  Reals
@@ -100,14 +104,16 @@
         (1, 1) : -3.141592653589793 :  None : 3.141592653589793 : False :  True :  Reals
         (2, 0) : -3.141592653589793 :  None : 3.141592653589793 : False :  True :  Reals
         (2, 1) : -3.141592653589793 :  None : 3.141592653589793 : False :  True :  Reals
+        (3, 0) : -3.141592653589793 :  None : 3.141592653589793 : False :  True :  Reals
+        (3, 1) : -3.141592653589793 :  None : 3.141592653589793 : False :  True :  Reals
 
 1 Objective Declarations
     obj : Size=1, Index=None, Active=True
         Key  : Active : Sense    : Expression
-        None :   True : minimize : 17.976*pg[0,0] + 41.943999999999996*pg[0,1] + 1797.6*sl[1,0] + 4194.4*sl[1,1] + 1797.6*sl[2,0] + 4194.4*sl[2,1]
+        None :   True : minimize : 17.976*pg[0,0] + 41.943999999999996*pg[0,1] + 1797.6*sl[1,0] + 4194.4*sl[1,1] + 1797.6*sl[2,0] + 4194.4*sl[2,1] + 1797.6*sl[3,0] + 4194.4*sl[3,1]
 
 2 Constraint Declarations
-    con_power_balance : Size=6, Index=con_power_balance_index, Active=True
+    con_power_balance : Size=8, Index=con_power_balance_index, Active=True
         Key    : Lower           : Body                              : Upper           : Active
         (0, 0) : bus_pd_max[0,0] :     pg[0,0] - (pf[0,0] + pf[1,0]) : bus_pd_max[0,0] :   True
         (0, 1) : bus_pd_max[0,1] :     pg[0,1] - (pf[0,1] + pf[1,1]) : bus_pd_max[0,1] :   True
@@ -115,10 +121,12 @@
         (1, 1) : bus_pd_max[1,1] :   - (pf[2,1] - pf[0,1]) + sl[1,1] : bus_pd_max[1,1] :   True
         (2, 0) : bus_pd_max[2,0] : - (- pf[1,0] - pf[2,0]) + sl[2,0] : bus_pd_max[2,0] :   True
         (2, 1) : bus_pd_max[2,1] : - (- pf[1,1] - pf[2,1]) + sl[2,1] : bus_pd_max[2,1] :   True
+        (3, 0) : bus_pd_max[3,0] :                           sl[3,0] : bus_pd_max[3,0] :   True
+        (3, 1) : bus_pd_max[3,1] :                           sl[3,1] : bus_pd_max[3,1] :   True
     con_power_flow : Size=6, Index=con_power_flow_index, Active=True
         Key    : Lower : Body                               : Upper : Active
-        (0, 0) :   0.0 : pf[0,0] + 25.0*(th[0,0] - th[1,0]) :   0.0 :   True
-        (0, 1) :   0.0 : pf[0,1] + 25.0*(th[0,1] - th[1,1]) :   0.0 :   True
+        (0, 0) :   0.0 : pf[0,0] + 50.0*(th[0,0] - th[1,0]) :   0.0 :   True
+        (0, 1) :   0.0 : pf[0,1] + 50.0*(th[0,1] - th[1,1]) :   0.0 :   True
         (1, 0) :   0.0 : pf[1,0] + 25.0*(th[0,0] - th[2,0]) :   0.0 :   True
         (1, 1) :   0.0 : pf[1,1] + 25.0*(th[0,1] - th[2,1]) :   0.0 :   True
         (2, 0) :   0.0 : pf[2,0] + 25.0*(th[1,0] - th[2,0]) :   0.0 :   True
