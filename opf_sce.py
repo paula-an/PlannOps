@@ -84,7 +84,7 @@ class OPFSce(OptimizationProblem):
     def _rule_power_flow(self, _, k: int, s: int) -> pyo.Expression:
         ki = self.psd.ebranch.bus_fr[k]
         kj = self.psd.ebranch.bus_to[k]
-        return self.model.pf[k, s] == self.psd.ebranch.b_lin[k]*(self.model.th[ki, s]-self.model.th[kj, s])
+        return self.model.pf[k, s] == -self.psd.ebranch.b_lin[k]*(self.model.th[ki, s]-self.model.th[kj, s])
     
     def _sl_inj(self, b: int, s: int):
         if b in self.psd.bus.set_with_demand:

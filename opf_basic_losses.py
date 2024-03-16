@@ -2,7 +2,6 @@ from basics.printing import pyo_extract
 from opf_basic import OPFBasic
 from abc_classes.optimization import PowerSystemData
 from basics.readsystems import read_from_MATPOWER
-import pyomo.environ as pyo
 import numpy as np
 
 class OPFBasicLoss(OPFBasic):

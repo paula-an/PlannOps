@@ -30,7 +30,7 @@ mpc.bus = [
 %% generator data
 %	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	Pmax	Pmin	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf type cost TYPE
 mpc.gen = [
-	1	0	0	0	0	1	100	1	100	0	0	0	0	0	0	0	0	0	0	0	0 1;
+	1	0	0	0	0	1	100	1	300	0	0	0	0	0	0	0	0	0	0	0	0 1;
 ];
 
 %% branch data
@@ -43,12 +43,12 @@ mpc.branch = [
 ];
 
 %% expansion branch data
-%	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax nlines
+%	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax nlines invTcost
 mpc.xbranch = [
-	1	2	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3	;
-	1	3	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3;
-	2	3	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3;
-	3	4	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3;
+	1	2	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3	1e6;
+	1	3	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3	1e6;
+	2	3	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3	1e6;
+	3	4	0.02	0.04	0.01	100	100	100	0	0	1	-360	360  3	1e6;
 ];
 
 %%-----  OPF Data  -----%%

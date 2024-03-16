@@ -15,10 +15,11 @@ class OPFBasic(OptimizationProblem):
         self.psd = psd
         
         self.losses = np.zeros(self.psd.ebranch.len)
-    
-    def define_model(self, debug: bool = False):
+        
         # Model
         self.model = pyo.ConcreteModel(name=self.__class__.__name__)
+    
+    def define_model(self, debug: bool = False):
 
         # Mutable Parameters
         self.model.bus_pd_max = pyo.Param(self.psd.bus.set_all, initialize=self.psd.bus.pd_max, mutable=True)
@@ -80,7 +81,7 @@ class OPFBasic(OptimizationProblem):
     def _rule_power_flow(self, _, k: int) -> pyo.Expression:
         ki = self.psd.ebranch.bus_fr[k]
         kj = self.psd.ebranch.bus_to[k]
-        return self.model.pf[k] == self.psd.ebranch.b_lin[k]*(self.model.th[ki]-self.model.th[kj])
+        return self.model.pf[k] == -self.psd.ebranch.b_lin[k]*(self.model.th[ki]-self.model.th[kj])
     
     def _sl_inj(self, b: int):
         if b in self.psd.bus.set_with_demand:

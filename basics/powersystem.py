@@ -7,17 +7,23 @@ class PowerSystemData:
                  power_base: float = 100,
                  max_ang_opening: float = 4*np.pi,
                  sce_file: str = None) -> None:
+        
         self.power_base = power_base
         self.max_ang_opening = max_ang_opening
+
         self.bus = BusData(system_data, power_base)
+
         self.ebranch = BranchData(system_data=system_data,
                                   data_key="branch",
                                   power_base=power_base,
                                   max_ang_opening=max_ang_opening)
-        self.xbranch = BranchData(system_data=system_data,
+        if "xbranch" in system_data:
+            self.xbranch = BranchData(system_data=system_data,
                                   data_key="xbranch",
                                   power_base=power_base,
                                   max_ang_opening=max_ang_opening)
+            self.xbranch_bin = XBranchBin(self.xbranch)
+
         self.gen = GeneratorsData(system_data, power_base)
 
         # Load Sheding cost
@@ -27,8 +33,11 @@ class PowerSystemData:
         if sce_file is not None:
             self.sce = ScenariosData(sce_file)
 
+        # Isolated buses treatment
         self.find_isolated_buses()
         if np.any(self.bus.is_isolated):
+            if "xbranch" not in system_data:
+                raise UserWarning("Buses {} are impossible to be connected!!!".format(np.where(self.bus.is_isolated)[0]))
             self.create_dumb_grid()
             self.find_isolated_buses()
             if np.any(self.bus.is_isolated):
@@ -49,6 +58,7 @@ class PowerSystemData:
                     
     
     def create_dumb_line(self, bus_fr: int, bus_to: int) -> None:
+        self.ebranch.is_dumb = np.append(self.ebranch.is_dumb, True)
         self.ebranch.bus_fr = np.append(self.ebranch.bus_fr, bus_fr)
         self.ebranch.bus_to = np.append(self.ebranch.bus_to, bus_to)
         self.ebranch.r = np.append(self.ebranch.r, 0)
@@ -61,9 +71,9 @@ class PowerSystemData:
         self.ebranch.flow_max_MW = np.append(self.ebranch.flow_max_MW, 0)
         self.ebranch.flow_max = np.append(self.ebranch.flow_max, self.ebranch.flow_max_dumb)
         self.ebranch.tap = np.append(self.ebranch.tap, 1)
+        self.ebranch.bigM = np.append(self.ebranch.bigM, self.ebranch.bigM_dumb)
         self.ebranch.set_all = np.append(self.ebranch.set_all, self.ebranch.len)
         self.ebranch.len += 1
-
 
 class BusData:
     """Class to load bus data"""
@@ -136,19 +146,26 @@ class BranchData:
         self.tap = system_data[data_key][:, 8][self.unique_lines]
         self.tap[np.where(self.tap == 0)] = 1
 
+        # Big M
+        self.bigM = -max_ang_opening * self.b_lin
+
         # Dumb lines
         min_flow_max = min(self.flow_max)/100
-        self.b_dumb = min_flow_max/max_ang_opening
+        self.b_dumb = -min_flow_max/max_ang_opening
         self.flow_max_dumb = 1.1*min_flow_max
+        self.is_dumb = np.zeros(self.len, dtype=bool)
+        self.bigM_dumb = self.flow_max_dumb
 
         # Maximum number of expansion lines
         if data_key != "xbranch":
             return
         
-        if np.shape(system_data[data_key])[1] == 14:
+        if np.shape(system_data[data_key])[1] == 15:
             self.invT_max = system_data[data_key][:, 13][self.unique_lines].astype(int)
+            self.invT_cost = system_data[data_key][:, 14][self.unique_lines]
         else:
             self.invT_max = 3*np.ones(self.len)
+            self.invT_cost = 1e6
         
         del self.unique_lines
     
@@ -189,6 +206,47 @@ class BranchData:
         # Update misc
         self.len = len(self.bus_fr)
         self.set_all = np.arange(self.len)
+
+    
+class XBranchBin:
+    def __init__(self, xbranch: BranchData) -> None:
+        
+        # Misc
+        self.len = sum(xbranch.invT_max)
+        self.set_all = np.arange(self.len)
+
+        # Data for binary models
+        self.bus_fr = np.zeros(self.len, dtype=int)  # From bus number
+        self.bus_to = np.zeros(self.len, dtype=int)  # To bus number
+
+        self.r = np.zeros(self.len, dtype=float)
+        self.x = np.zeros(self.len, dtype=float)
+        self.b_shunt = np.zeros(self.len, dtype=float)
+        self.g = np.zeros(self.len, dtype=float)
+        self.b = np.zeros(self.len, dtype=float)
+        self.b_lin = np.zeros(self.len, dtype=float)
+        self.flow_max = np.zeros(self.len, dtype=float)
+        self.tap = np.zeros(self.len, dtype=float)
+        self.bigM = np.zeros(self.len, dtype=float)
+        self.invT_cost = np.zeros(self.len, dtype=float)
+
+        idx = 0
+        for k in xbranch.set_all:
+            for _ in range(xbranch.invT_max[k]):
+                self.bus_fr[idx] = xbranch.bus_fr[k]  # From bus number
+                self.bus_to[idx] = xbranch.bus_to[k]  # To bus number
+                self.r[idx] = xbranch.r[k]
+                self.x[idx] = xbranch.x[k]
+                self.b_shunt[idx] = xbranch.b_shunt[k]
+                self.g[idx] = xbranch.g[k]
+                self.b[idx] = xbranch.b[k]
+                self.b_lin[idx] = xbranch.b_lin[k]
+                self.flow_max[idx] = xbranch.flow_max[k]
+                self.tap[idx] = xbranch.tap[k]
+                self.bigM[idx] = xbranch.bigM[k]
+                self.invT_cost[idx] = xbranch.invT_cost[k]
+
+                idx += 1
 
 
 class GeneratorsData:
