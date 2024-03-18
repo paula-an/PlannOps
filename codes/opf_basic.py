@@ -42,7 +42,7 @@ class OPFBasic(OptimizationProblem):
 
         # Data file for debug
         if debug:
-            with open('output.txt', 'w') as file:
+            with open('codes/.results/output.txt', 'w') as file:
                 self.model.pprint(ostream=file)
     
     def solve_model(self) -> None:
@@ -94,7 +94,7 @@ class OPFBasic(OptimizationProblem):
     def _total_sl_cost(self) -> pyo.Expression:
         return sum([self.psd.bus.sl_cost*self.model.sl[b] for b in self.psd.bus.set_with_demand])
     
-    def get_results(self, export: bool=True, display: bool=True, file_name: str="results.txt") -> None:
+    def get_results(self, export: bool=True, display: bool=True, file_name: str="codes/.results/results.txt") -> None:
         with open(file_name, "w") as file:
             for idx, out in enumerate([sys.stdout, file]):
                 if idx == 0 and not display:
@@ -149,7 +149,7 @@ class OPFBasic(OptimizationProblem):
                 print(pyo.value(self._total_sl_cost()), file=out)
 
 def main():
-    data_file = "dataMATPOWER/case3.m"
+    data_file = "codes/data/MATPOWER/case3.m"
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasic(psd)

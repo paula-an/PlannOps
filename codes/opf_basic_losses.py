@@ -52,7 +52,7 @@ class OPFBasicLoss(OPFBasic):
         return np.sum((self.psd.bus.pd_max-self.pd_max_old)**2) < self.TOL
 
 def main() -> None:
-    data_file = "dataMATPOWER/case3.m"
+    data_file = "codes/data/MATPOWER/case3.m"
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasicLoss(psd)

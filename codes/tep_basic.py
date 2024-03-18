@@ -34,7 +34,7 @@ class TEPBasic(OPFBasic):
         
         # Data file for debug
         if debug:
-            with open('output.txt', 'w') as file:
+            with open('codes/.results/output.txt', 'w') as file:
                 self.model.pprint(ostream=file)
 
     def _create_objective(self) -> pyo.Expression:
@@ -73,7 +73,7 @@ class TEPBasic(OPFBasic):
     def _total_invT_cost(self) -> pyo.Expression:
         return sum([self.psd.xbranch_bin.invT_cost[k]*self.model.invT[k] for k in self.psd.xbranch_bin.set_all])
     
-    def get_results(self, export: bool=True, display: bool=True, file_name: str="results.txt") -> None:
+    def get_results(self, export: bool=True, display: bool=True, file_name: str="codes/.results/results.txt") -> None:
         super().get_results(export=export, display=display, file_name=file_name)
         with open(file_name, "a") as file:
             for idx, out in enumerate([sys.stdout, file]):
@@ -114,7 +114,7 @@ class TEPBasic(OPFBasic):
         return xpf, xlosses, invT
 
 def main():
-    data_file = "dataMATPOWER/case3.m"
+    data_file = "codes/data/MATPOWER/case3.m"
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = TEPBasic(psd)
