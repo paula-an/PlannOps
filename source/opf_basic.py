@@ -5,8 +5,9 @@ from basics.powersystem import PowerSystemData
 from abc_classes.optimization import OptimizationProblem
 import pyomo.environ as pyo
 import numpy as np
-from basics.printing import print_centered_text, int_format, float_format, table_format
+from basics.printing import print_centered_text, int_format, float_format, table_format, pyo_extract
 import sys
+import json
 
 class OPFBasic(OptimizationProblem):
 
@@ -42,7 +43,7 @@ class OPFBasic(OptimizationProblem):
 
         # Data file for debug
         if debug:
-            with open('codes/.results/output.txt', 'w') as file:
+            with open('source/.results/output.txt', 'w') as file:
                 self.model.pprint(ostream=file)
     
     def solve_model(self) -> None:
@@ -94,7 +95,11 @@ class OPFBasic(OptimizationProblem):
     def _total_sl_cost(self) -> pyo.Expression:
         return sum([self.psd.bus.sl_cost*self.model.sl[b] for b in self.psd.bus.set_with_demand])
     
-    def get_results(self, export: bool=True, display: bool=True, file_name: str="codes/.results/results.txt") -> None:
+    def get_results(self,
+                    export: bool=True,
+                    display: bool=True,
+                    file_name: str="source/.results/results.txt",
+                    name_file_test: str=None) -> None:
         with open(file_name, "w") as file:
             for idx, out in enumerate([sys.stdout, file]):
                 if idx == 0 and not display:
@@ -147,16 +152,34 @@ class OPFBasic(OptimizationProblem):
 
                 print("\nTotal Load shedding cost:", file=out)
                 print(pyo.value(self._total_sl_cost()), file=out)
+        
+        self.results = dict()
 
-def main():
-    data_file = "codes/data/MATPOWER/case3.m"
+        # Extracting results
+        self.results["pg"] = pyo_extract(self.model.pg, self.psd.gen.set_all)
+        self.results["th"] = pyo_extract(self.model.th, self.psd.bus.set_all)
+        self.results["sl"] = pyo_extract(self.model.sl, self.psd.bus.set_with_demand)
+        self.results["pf"] = pyo_extract(self.model.pf, self.psd.ebranch.set_all)
+
+        if name_file_test is not None:
+            np.save(name_file_test, self.results)
+
+def main_opf_basic(data_file: str, name_file_test: str=None) -> None:
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasic(psd)
     op.define_model(debug=True)
     op.solve_model()
-    op.get_results()
+    op.get_results(name_file_test=name_file_test)
+    return op.results
 
 if __name__ == "__main__":
-    main()
+    data_file = "source/data/MATPOWER/case3.m"
+    
+    is_for_testing = True
+    if is_for_testing:
+        name_file_test = "source/tests/results/res_OPFBasic_case3.npy"
+        main_opf_basic(data_file=data_file, name_file_test=name_file_test)
+    else:
+        main_opf_basic(data_file=data_file)
         

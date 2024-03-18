@@ -34,7 +34,7 @@ class TEPBasic(OPFBasic):
         
         # Data file for debug
         if debug:
-            with open('codes/.results/output.txt', 'w') as file:
+            with open('source/.results/output.txt', 'w') as file:
                 self.model.pprint(ostream=file)
 
     def _create_objective(self) -> pyo.Expression:
@@ -73,7 +73,10 @@ class TEPBasic(OPFBasic):
     def _total_invT_cost(self) -> pyo.Expression:
         return sum([self.psd.xbranch_bin.invT_cost[k]*self.model.invT[k] for k in self.psd.xbranch_bin.set_all])
     
-    def get_results(self, export: bool=True, display: bool=True, file_name: str="codes/.results/results.txt") -> None:
+    def get_results(self, export: bool=True,
+                    display: bool=True,
+                    file_name: str="source/.results/results.txt",
+                    name_file_test: str=None) -> None:
         super().get_results(export=export, display=display, file_name=file_name)
         with open(file_name, "a") as file:
             for idx, out in enumerate([sys.stdout, file]):
@@ -95,6 +98,13 @@ class TEPBasic(OPFBasic):
                     losses = float_format(xlosses[k])
                     n_invT = int_format(invT[k])
                     print(branch + fr + to + pflow + losses + n_invT, file=out)
+
+        # Extracting results
+        self.results["xpf"] = pyo_extract(self.model.xpf, self.psd.xbranch_bin.set_all)
+        self.results["invT"] = pyo_extract(self.model.invT, self.psd.xbranch_bin.set_all)
+
+        if name_file_test is not None:
+            np.save(name_file_test, self.results)
     
     def _get_non_bin_res(self):
         xpf = np.zeros(self.psd.xbranch.len)
@@ -113,15 +123,23 @@ class TEPBasic(OPFBasic):
         
         return xpf, xlosses, invT
 
-def main():
-    data_file = "codes/data/MATPOWER/case3.m"
+def main_tep_basic(data_file: str, name_file_test: str=None):
+    data_file = "source/data/MATPOWER/case3.m"
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = TEPBasic(psd)
     op.define_model(debug=True)
     op.solve_model()
-    op.get_results()
+    op.get_results(name_file_test=name_file_test)
+    return op.results
 
 if __name__ == "__main__":
-    main()
+    data_file = "source/tests/data/MATPOWER/case3.m"
+    
+    is_for_testing = True
+    if is_for_testing:
+        name_file_test = "source/tests/results/res_TEPBasic_case3.npy"
+        main_tep_basic(data_file=data_file, name_file_test=name_file_test)
+    else:
+        main_tep_basic(data_file=data_file)
         

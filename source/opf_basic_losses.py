@@ -51,14 +51,21 @@ class OPFBasicLoss(OPFBasic):
     def _stop_criterion(self) -> bool:
         return np.sum((self.psd.bus.pd_max-self.pd_max_old)**2) < self.TOL
 
-def main() -> None:
-    data_file = "codes/data/MATPOWER/case3.m"
+def main_opf_basic_losses(data_file: str, name_file_test: str=None) -> None:
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasicLoss(psd)
     op.define_model(debug=True)
     op.solve_model()
-    op.get_results()
+    op.get_results(name_file_test=name_file_test)
+    return op.results
 
 if __name__ == "__main__":
-    main()
+    data_file = "source/tests/data/MATPOWER/case3.m"
+
+    is_for_testing = True
+    if is_for_testing:
+        name_file_test = "source/tests/results/res_OPFBasic_loss_case3.npy"
+        main_opf_basic_losses(data_file=data_file, name_file_test=name_file_test)
+    else:
+        main_opf_basic_losses(data_file=data_file)

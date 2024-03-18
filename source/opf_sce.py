@@ -5,7 +5,7 @@ from basics.powersystem import PowerSystemData
 from abc_classes.optimization import OptimizationProblem
 import pyomo.environ as pyo
 import numpy as np
-from basics.printing import print_centered_text, int_format, float_format, table_format
+from basics.printing import print_centered_text, int_format, float_format, table_format, pyo_extract_2D
 import sys
 
 class OPFSce(OptimizationProblem):
@@ -42,7 +42,7 @@ class OPFSce(OptimizationProblem):
 
         # Data file for debug
         if debug:
-            with open('output.txt', 'w') as file:
+            with open('source/.results/output.txt', 'w') as file:
                 self.model.pprint(ostream=file)
     
     def solve_model(self) -> None:
@@ -99,7 +99,10 @@ class OPFSce(OptimizationProblem):
         return sum([self.psd.sce.data[s, -1] * self.psd.bus.sl_cost*self.model.sl[b, s] \
                     for b in self.psd.bus.set_with_demand for s in self.psd.sce.set_obs])
     
-    def get_results(self, export: bool=True, display: bool=True, file_name: str="results.txt") -> None:
+    def get_results(self, export: bool=True,
+                    display: bool=True,
+                    file_name: str="source/.results/results.txt",
+                    name_file_test: str=None) -> None:
         with open(file_name, "w") as file:
             for idx, out in enumerate([sys.stdout, file]):
                 if idx == 0 and not display:
@@ -122,6 +125,10 @@ class OPFSce(OptimizationProblem):
 
                 print("\nTotal Load shedding cost:", file=out)
                 print(pyo.value(self._total_sl_cost()), file=out)
+
+        self._extract_pyo_values()
+        if name_file_test is not None:
+            np.save(name_file_test, self.results)
     
     def _print_bus_data(self, out) -> None:
         print("\n\n", file=out)
@@ -165,17 +172,33 @@ class OPFSce(OptimizationProblem):
                 pg = float_format(self.model.pg[g, s])
                 cost = float_format(self.model.pg[g, s]*self.psd.gen.cost[g])
                 print(gen + bus + pg + cost, file=out)
+    
+    def _extract_pyo_values(self) -> None:
+        self.results = dict()
 
-def main():
-    data_file = "dataMATPOWER/case3.m"
-    sce_file = "Scenarios/load_test.csv"
+        # Extracting results
+        self.results["pg"] = pyo_extract_2D(self.model.pg, self.psd.gen.set_all, self.psd.sce.set_obs)
+        self.results["th"] = pyo_extract_2D(self.model.th, self.psd.bus.set_all, self.psd.sce.set_obs)
+        self.results["sl"] = pyo_extract_2D(self.model.sl, self.psd.bus.set_with_demand, self.psd.sce.set_obs)
+        self.results["pf"] = pyo_extract_2D(self.model.pf, self.psd.ebranch.set_all, self.psd.sce.set_obs)
+
+def main_opf_basic_sce(data_file: str, sce_file: str, name_file_test: str=None):
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data, sce_file=sce_file)
     op = OPFSce(psd)
     op.define_model(debug=True)
     op.solve_model()
-    op.get_results()
+    op.get_results(name_file_test=name_file_test)
+    return op.results
 
 if __name__ == "__main__":
-    main()
+    data_file = "source/tests/data/MATPOWER/case3.m"
+    sce_file = "source/tests/data/scenarios/load_test.csv"
+
+    is_for_testing = True
+    if is_for_testing:
+        name_file_test = "source/tests/results/res_OPFBasic_sce_case3.npy"
+        main_opf_basic_sce(data_file=data_file, sce_file=sce_file, name_file_test=name_file_test)
+    else:
+        main_opf_basic_sce(data_file=data_file, sce_file=sce_file)
         

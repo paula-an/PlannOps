@@ -16,5 +16,8 @@ class OptimizationProblem(ABC):
         ...
 
     @abstractmethod
-    def get_results(self, export: bool=True, display: bool=True, file_name: str="codes/.results/results.txt") -> None:
+    def get_results(self, export: bool=True,
+                    display: bool=True,
+                    file_name: str="source/.results/results.txt",
+                    name_file_test: str=None) -> None:
         ...

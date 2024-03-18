@@ -27,7 +27,14 @@ def table_format(ncol: int) -> str:
     return ncol*"{:>9}"
 
 def pyo_extract(var: pyo.Var, set: np.ndarray) -> np.ndarray:
-    array = np.zeros_like(var)
-    for idx in set:
-        array[idx] = pyo.value(var[idx])
+    array = np.zeros(len(set))
+    for arr_idx, set_idx in enumerate(set):
+        array[arr_idx] = pyo.value(var[set_idx])
+    return array
+
+def pyo_extract_2D(var: pyo.Var, set_1D: np.ndarray, set_2D: np.ndarray) -> np.ndarray:
+    array = np.zeros((len(set_1D), len(set_2D)))
+    for arr_idx_1D, set_idx_1D in enumerate(set_1D):
+        for arr_idx_2D, set_idx_2D in enumerate(set_2D):
+            array[arr_idx_1D, arr_idx_2D] = pyo.value(var[set_idx_1D, set_idx_2D])
     return array
