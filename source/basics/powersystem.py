@@ -287,12 +287,14 @@ class GeneratorsData:
         # Generation cost
         self.cost = np.zeros(self.len)
         self.FOR = np.zeros(self.len)
+        self.serie = np.zeros(self.len, dtype=int)
         co2tax = system_data["c02tax"][0, 0]
         for gen_idx in self.set_all:
             cost_idx = self.type[gen_idx]-1
             opecost = system_data["gencost"][cost_idx, 2]
             co2prod = system_data["gencost"][cost_idx, 3]
             self.cost[gen_idx] = opecost + co2prod*co2tax
+            self.serie[gen_idx] = system_data["gencost"][cost_idx, 5].astype(int)
         
         
             # Reliability Data
@@ -306,8 +308,8 @@ class GeneratorsData:
         raise NotImplementedError()
     
 class ScenariosData:
-    def __init__(self, file) -> None:
-        self.data = np.genfromtxt(file, delimiter=",")
+    def __init__(self, sce_file) -> None:
+        self.data = np.genfromtxt(sce_file, delimiter=",")
 
         # Misc
         (self.len_obs, self.len_series) = np.shape(self.data)

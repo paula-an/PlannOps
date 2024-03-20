@@ -140,10 +140,10 @@ def main_opf_monte_carlo(data_file: str, name_file_test: str=None) -> None:
     return op.results
 
 if __name__ == "__main__":
-    # data_file = "source/data/matpower/case3.m"
-    data_file = "source/tests/data/matpower/case24_ieee_rts_reliability.m"
+    # data_file = "source/data/matpower/case3_Basics.m"
+    data_file = "source/data/matpower/case24_ieee_rts_reliability.m"
     
-    is_for_testing = True
+    is_for_testing = False
     if is_for_testing:
         name_file_test = "source/tests/results/res_OPFMonteCarlo_case24_ieee_rts_reliability.npy"
         main_opf_monte_carlo(data_file=data_file, name_file_test=name_file_test)

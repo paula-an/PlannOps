@@ -1,0 +1,22 @@
+Implementado:
+- Leitura MATPOWER
+- OPF básico
+- OPF com perdas (carguinha)
+- OPF com cenários (somente demanda)
+- PET básico
+- Memoization
+- Unit Test
+- Barra de progresso
+- Impressão de resultados
+- Simulação Monte Carlo (Confiabilidade)
+
+Em implementação
+- Arthur: OPF com renováveis
+- Lucas: OPF-AC
+
+A fazer:
+- Leitura do ANAREDE
+- Newton-Raphson
+- DMR-Solver
+- Áreas (Séries de demanda)
+- Decomposição de Benders

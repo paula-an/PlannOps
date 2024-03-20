@@ -1,12 +1,13 @@
 # Created in 05/03/2024 by Arthur
 
-from basics.readsystems import read_from_MATPOWER
+from basics.readsystems import read_from_MATPOWER, read_from_ANAREDE
 from basics.powersystem import PowerSystemData
 from abc_classes.optimization import OptimizationProblem
 import pyomo.environ as pyo
 import numpy as np
 from basics.printing import print_centered_text, int_format, float_format, table_format, pyo_extract
 import sys
+from basics.read_systems_files import ReadSystemsFiles
 
 class OPFBasic(OptimizationProblem):
 
@@ -176,7 +177,7 @@ def main_opf_basic(data_file: str, name_file_test: str=None) -> None:
     return op.results
 
 if __name__ == "__main__":
-    data_file = "source/data/MATPOWER/case3.m"
+    data_file = "source/data/matpower/case3_Basics.m"
     
     is_for_testing = False
     if is_for_testing:

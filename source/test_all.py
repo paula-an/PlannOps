@@ -9,26 +9,26 @@ from opf_monte_carlo import main_opf_monte_carlo
 
 class TestAll(unittest.TestCase):
     def test_OPFBasic(self):
-        data_file = "source/tests/data/MATPOWER/case3.m"
+        data_file = "source/tests/data/MATPOWER/case3_Basics.m"
         results = np.load("source/tests/results/res_OPFBasic_case3.npy",allow_pickle=True).tolist()
         numpy_assert_almost_dict_values(main_opf_basic(data_file=data_file), results)
 
     
     def test_OPFBasicLoss(self):
-        data_file = "source/tests/data/MATPOWER/case3.m"
+        data_file = "source/tests/data/MATPOWER/case3_Basics.m"
         results = np.load("source/tests/results/res_OPFBasic_loss_case3.npy",allow_pickle=True).tolist()
         numpy_assert_almost_dict_values(main_opf_basic_losses(data_file=data_file), results)
 
     
     def test_OPFSce(self):
-        data_file = "source/tests/data/MATPOWER/case3.m"
+        data_file = "source/tests/data/MATPOWER/case3_sce.m"
         results = np.load("source/tests/results/res_OPFBasic_sce_case3.npy",allow_pickle=True).tolist()
         sce_file = "source/tests/data/scenarios/load_test.csv"
         numpy_assert_almost_dict_values(main_opf_sce(data_file=data_file, sce_file=sce_file), results)
 
     
     def test_TEPBasic(self):
-        data_file = "source/tests/data/MATPOWER/case3.m"
+        data_file = "source/tests/data/MATPOWER/case3_Basics.m"
         results = np.load("source/tests/results/res_TEPBasic_case3.npy",allow_pickle=True).tolist()
         numpy_assert_almost_dict_values(main_tep_basic(data_file=data_file), results)
 

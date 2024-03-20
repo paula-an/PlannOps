@@ -148,12 +148,12 @@ mpc.gencost = [
 	1	3000      .9       	0     100       -1	0.02;  %  U12  Fossil Steam
 	2	3000       5     	0     100       -1	0.10;  %  U20  Combus. Turbine
 	3	3000      .1       	0     100       -1	0.01;  %  U50  Hydro
-	4	3000      .8       	0     100        1	0.02;  %  U76  Fossil Steam
-	5	3000      .8       	0     100        1	0.04;  %  U100 Fossil Steam
-	6	3000      .8       	0     100        1	0.04;  %  U155 Fossil Steam
-	7	3000      .7       	0     100        1	0.05;  %  U197 Fossil Steam
-	8	3000      .7       	0     100        1	0.08;  %  U350 Fossil Steam
-	9	3000      .7       	0     100        1	0.12;  %  U400 Nuclear
+	4	3000      .8       	0     100       -1	0.02;  %  U76  Fossil Steam
+	5	3000      .8       	0     100       -1	0.04;  %  U100 Fossil Steam
+	6	3000      .8       	0     100       -1	0.04;  %  U155 Fossil Steam
+	7	3000      .7       	0     100       -1	0.05;  %  U197 Fossil Steam
+	8	3000      .7       	0     100       -1	0.08;  %  U350 Fossil Steam
+	9	3000      .7       	0     100       -1	0.12;  %  U400 Nuclear
 ];
 
 %% Co2tax

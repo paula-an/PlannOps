@@ -61,7 +61,7 @@ def main_opf_basic_losses(data_file: str, name_file_test: str=None) -> None:
     return op.results
 
 if __name__ == "__main__":
-    data_file = "source/tests/data/MATPOWER/case3.m"
+    data_file = "source/data/matpower/case3_Basics.m"
 
     is_for_testing = False
     if is_for_testing:

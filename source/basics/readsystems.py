@@ -31,3 +31,35 @@ def read_from_MATPOWER(data_file: str) -> dict:
             matrices[matrix_name] = np.array(matrix)
 
     return matrices
+
+def read_from_ANAREDE(data_file: str) -> dict:
+    sections = {}
+    with open(data_file, 'r') as file:
+        lines = file.readlines()
+        current_section = None
+        current_lines = []
+        for line in lines:
+            header = line.strip()
+            if not header.startswith("("):  # Se não começar com "("
+                if current_section is not None:
+                    line = read_section(line)
+                current_section = header
+                current_lines = []
+            else:
+                current_lines.append(line)
+        if current_section is not None and current_lines:
+            sections[current_section] = read_section(current_lines)
+    return sections
+
+
+
+def read_section(lines):
+    if not lines:
+        return None
+    data = []
+    for line in lines:
+        if line.strip() == "99999":
+            break
+        values = line.split()
+        data.append([float(value) if "." in value else int(value) for value in values])
+    return np.array(data)

@@ -20,13 +20,14 @@ class OPFSce(OptimizationProblem):
         # Model
         self.model = pyo.ConcreteModel(name=self.__class__.__name__)
 
-        # Mutable Parameters
-        self.model.bus_pd_max = pyo.Param(self.psd.bus.set_all, self.psd.sce.set_obs, initialize=self._init_bus_pd_max, mutable=True)
-
+        # Scenarios' Parameters
+        self.model.bus_pd_max = pyo.Param(self.psd.bus.set_all, self.psd.sce.set_obs, initialize=self._init_bus_pd_sce)
+        self.model.gen_pg_sce = pyo.Param(self.psd.gen.set_all, self.psd.sce.set_obs, initialize=self._init_bus_pg_sce)
+        
         # Variables
         self.model.pg = pyo.Var(self.psd.gen.set_all, self.psd.sce.set_obs, within=pyo.Reals, bounds=self._bounds_pg)  # Power Generation
         self.model.th = pyo.Var(self.psd.bus.set_all, self.psd.sce.set_obs, within=pyo.Reals, bounds=(-np.pi, np.pi))  # Voltage angle
-        for s in self.psd.sce.set_obs:
+        for s in self.psd.sce.set_obs:  
             self.model.th[0, s].fix(0)
         self.model.sl = pyo.Var(self.psd.bus.set_with_demand, self.psd.sce.set_obs, within=pyo.Reals, bounds=self._bounds_sl)  # Load shedding
         
@@ -49,14 +50,21 @@ class OPFSce(OptimizationProblem):
         solver = pyo.SolverFactory('glpk')
         solver.solve(self.model)
 
-    def _init_bus_pd_max(self, _, b: int, s: int) -> np.ndarray:
+    def _init_bus_pd_sce(self, _, b: int, s: int) -> np.ndarray:
         return self.psd.bus.pd_max[b] * self.psd.sce.data[s, self.psd.bus.area[b]]
+
+    def _init_bus_pg_sce(self, _, g: int, s: int) -> np.ndarray:
+        gen_serie = self.psd.gen.serie[g]
+        if gen_serie < 0:
+            return 1
+        else:
+            return self.psd.sce.data[s, gen_serie]
     
     def _bounds_pf(self, _, k: int, s: int) -> tuple:
         return (-self.psd.ebranch.flow_max[k], +self.psd.ebranch.flow_max[k])
     
     def _bounds_pg(self, _, g: int, s: int) -> tuple:
-        return (0, self.psd.gen.pg_max[g])
+        return (0, self.psd.gen.pg_max[g] * self.model.gen_pg_sce[g, s])
     
     def _bounds_sl(self, _, b: int, s: int) -> tuple:
         return (0, self.model.bus_pd_max[b, s])
@@ -185,6 +193,7 @@ class OPFSce(OptimizationProblem):
 def main_opf_sce(data_file: str, sce_file: str, name_file_test: str=None):
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data, sce_file=sce_file)
+    psd.bus.define_all_areas_as_zero()  # Considered historical series has only one area
     op = OPFSce(psd)
     op.define_model(debug=True)
     op.solve_model()
@@ -192,8 +201,8 @@ def main_opf_sce(data_file: str, sce_file: str, name_file_test: str=None):
     return op.results
 
 if __name__ == "__main__":
-    data_file = "source/tests/data/MATPOWER/case3.m"
-    sce_file = "source/tests/data/scenarios/load_test.csv"
+    data_file = "source/data/matpower/case3_sce.m"
+    sce_file = "source/data/scenarios/load_test.csv"
 
     is_for_testing = False
     if is_for_testing:

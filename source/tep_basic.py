@@ -124,7 +124,6 @@ class TEPBasic(OPFBasic):
         return xpf, xlosses, invT
 
 def main_tep_basic(data_file: str, name_file_test: str=None):
-    data_file = "source/data/MATPOWER/case3.m"
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = TEPBasic(psd)
@@ -134,7 +133,7 @@ def main_tep_basic(data_file: str, name_file_test: str=None):
     return op.results
 
 if __name__ == "__main__":
-    data_file = "source/tests/data/MATPOWER/case3.m"
+    data_file = "source/data/matpower/case3_Basics.m"
     
     is_for_testing = False
     if is_for_testing:
