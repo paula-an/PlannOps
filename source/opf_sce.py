@@ -182,7 +182,7 @@ class OPFSce(OptimizationProblem):
         self.results["sl"] = pyo_extract_2D(self.model.sl, self.psd.bus.set_with_demand, self.psd.sce.set_obs)
         self.results["pf"] = pyo_extract_2D(self.model.pf, self.psd.ebranch.set_all, self.psd.sce.set_obs)
 
-def main_opf_basic_sce(data_file: str, sce_file: str, name_file_test: str=None):
+def main_opf_sce(data_file: str, sce_file: str, name_file_test: str=None):
     system_data = read_from_MATPOWER(data_file)
     psd = PowerSystemData(system_data=system_data, sce_file=sce_file)
     op = OPFSce(psd)
@@ -195,10 +195,10 @@ if __name__ == "__main__":
     data_file = "source/tests/data/MATPOWER/case3.m"
     sce_file = "source/tests/data/scenarios/load_test.csv"
 
-    is_for_testing = True
+    is_for_testing = False
     if is_for_testing:
         name_file_test = "source/tests/results/res_OPFBasic_sce_case3.npy"
-        main_opf_basic_sce(data_file=data_file, sce_file=sce_file, name_file_test=name_file_test)
+        main_opf_sce(data_file=data_file, sce_file=sce_file, name_file_test=name_file_test)
     else:
-        main_opf_basic_sce(data_file=data_file, sce_file=sce_file)
+        main_opf_sce(data_file=data_file, sce_file=sce_file)
         

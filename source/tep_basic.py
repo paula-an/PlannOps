@@ -136,7 +136,7 @@ def main_tep_basic(data_file: str, name_file_test: str=None):
 if __name__ == "__main__":
     data_file = "source/tests/data/MATPOWER/case3.m"
     
-    is_for_testing = True
+    is_for_testing = False
     if is_for_testing:
         name_file_test = "source/tests/results/res_TEPBasic_case3.npy"
         main_tep_basic(data_file=data_file, name_file_test=name_file_test)

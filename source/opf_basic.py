@@ -7,7 +7,6 @@ import pyomo.environ as pyo
 import numpy as np
 from basics.printing import print_centered_text, int_format, float_format, table_format, pyo_extract
 import sys
-import json
 
 class OPFBasic(OptimizationProblem):
 
@@ -24,6 +23,9 @@ class OPFBasic(OptimizationProblem):
 
         # Mutable Parameters
         self.model.bus_pd_max = pyo.Param(self.psd.bus.set_all, initialize=self.psd.bus.pd_max, mutable=True)
+        self.model.ebranch_flow_max = pyo.Param(self.psd.ebranch.set_all, initialize=self.psd.ebranch.flow_max, mutable=True)
+        self.model.ebranch_b_lin = pyo.Param(self.psd.ebranch.set_all, initialize=self.psd.ebranch.b_lin, mutable=True)
+        self.model.gen_pg_max = pyo.Param(self.psd.gen.set_all, initialize=self.psd.gen.pg_max, mutable=True)
 
         # Variables
         self.model.pg = pyo.Var(self.psd.gen.set_all, within=pyo.Reals, bounds=self._bounds_pg)  # Power Generation
@@ -51,10 +53,10 @@ class OPFBasic(OptimizationProblem):
         solver.solve(self.model)
     
     def _bounds_pf(self, _, k: int) -> tuple:
-        return (-self.psd.ebranch.flow_max[k], +self.psd.ebranch.flow_max[k])
+        return (-self.model.ebranch_flow_max[k], +self.model.ebranch_flow_max[k])
     
     def _bounds_pg(self, _, g: int) -> tuple:
-        return (0, self.psd.gen.pg_max[g])
+        return (0, self.model.gen_pg_max[g])
     
     def _bounds_sl(self, _, b: int) -> tuple:
         return (0, self.model.bus_pd_max[b])
@@ -82,7 +84,7 @@ class OPFBasic(OptimizationProblem):
     def _rule_power_flow(self, _, k: int) -> pyo.Expression:
         ki = self.psd.ebranch.bus_fr[k]
         kj = self.psd.ebranch.bus_to[k]
-        return self.model.pf[k] == -self.psd.ebranch.b_lin[k]*(self.model.th[ki]-self.model.th[kj])
+        return self.model.pf[k] == -self.model.ebranch_b_lin[k]*(self.model.th[ki]-self.model.th[kj])
     
     def _sl_inj(self, b: int):
         if b in self.psd.bus.set_with_demand:
@@ -176,7 +178,7 @@ def main_opf_basic(data_file: str, name_file_test: str=None) -> None:
 if __name__ == "__main__":
     data_file = "source/data/MATPOWER/case3.m"
     
-    is_for_testing = True
+    is_for_testing = False
     if is_for_testing:
         name_file_test = "source/tests/results/res_OPFBasic_case3.npy"
         main_opf_basic(data_file=data_file, name_file_test=name_file_test)

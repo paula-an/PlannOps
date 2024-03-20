@@ -18,7 +18,7 @@ class PowerSystemData:
                                   power_base=power_base,
                                   max_ang_opening=max_ang_opening)
         if "xbranch" in system_data:
-            self.xbranch = BranchData(system_data=system_data,
+            self.xbranch = XBranchData(system_data=system_data,
                                   data_key="xbranch",
                                   power_base=power_base,
                                   max_ang_opening=max_ang_opening)
@@ -156,18 +156,15 @@ class BranchData:
         self.is_dumb = np.zeros(self.len, dtype=bool)
         self.bigM_dumb = self.flow_max_dumb
 
-        # Maximum number of expansion lines
-        if data_key != "xbranch":
-            return
-        
+        # Reliability Data
         if np.shape(system_data[data_key])[1] == 15:
-            self.invT_max = system_data[data_key][:, 13][self.unique_lines].astype(int)
-            self.invT_cost = system_data[data_key][:, 14][self.unique_lines]
+            self.failure_rate = system_data[data_key][:, 13][self.unique_lines]
+            self.repair_time = system_data[data_key][:, 14][self.unique_lines]
+            self.FOR = self.repair_time / (8760 / self.failure_rate + self.repair_time)
         else:
-            self.invT_max = 3*np.ones(self.len)
-            self.invT_cost = 1e6
-        
-        del self.unique_lines
+            self.failure_rate = None
+            self.repair_time = None
+            self.FOR = None
     
     def new(self):
         raise NotImplementedError()
@@ -207,7 +204,21 @@ class BranchData:
         self.len = len(self.bus_fr)
         self.set_all = np.arange(self.len)
 
-    
+
+class XBranchData(BranchData):
+    def __init__(self, system_data: np.ndarray, data_key: str, power_base: float, max_ang_opening: float) -> None:
+        super().__init__(system_data, data_key, power_base, max_ang_opening)
+
+        if np.shape(system_data[data_key])[1] == 15:
+            self.invT_max = system_data[data_key][:, 13][self.unique_lines].astype(int)
+            self.invT_cost = system_data[data_key][:, 14][self.unique_lines]
+        else:
+            self.invT_max = 3*np.ones(self.len)
+            self.invT_cost = 1e6
+        
+        del self.unique_lines
+
+
 class XBranchBin:
     def __init__(self, xbranch: BranchData) -> None:
         
@@ -275,12 +286,18 @@ class GeneratorsData:
 
         # Generation cost
         self.cost = np.zeros(self.len)
+        self.FOR = np.zeros(self.len)
         co2tax = system_data["c02tax"][0, 0]
         for gen_idx in self.set_all:
             cost_idx = self.type[gen_idx]-1
             opecost = system_data["gencost"][cost_idx, 2]
             co2prod = system_data["gencost"][cost_idx, 3]
             self.cost[gen_idx] = opecost + co2prod*co2tax
+        
+        
+            # Reliability Data
+            if np.shape(system_data["gencost"])[1] == 7:
+                self.FOR[gen_idx] = system_data["gencost"][cost_idx, 6]
     
     def set_new(self):
         raise NotImplementedError()

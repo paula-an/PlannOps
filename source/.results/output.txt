@@ -1,4 +1,4 @@
-13 Set Declarations
+16 Set Declarations
     bus_pd_max_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :    4 : {0, 1, 2, 3}
@@ -20,6 +20,15 @@
     con_power_xflow_pos_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :   12 : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+    ebranch_b_lin_index : Size=1, Index=None, Ordered=False
+        Key  : Dimen : Domain : Size : Members
+        None :     1 :    Any :    4 : {0, 1, 2, 3}
+    ebranch_flow_max_index : Size=1, Index=None, Ordered=False
+        Key  : Dimen : Domain : Size : Members
+        None :     1 :    Any :    4 : {0, 1, 2, 3}
+    gen_pg_max_index : Size=1, Index=None, Ordered=False
+        Key  : Dimen : Domain : Size : Members
+        None :     1 :    Any :    1 :    {0,}
     invT_index : Size=1, Index=None, Ordered=False
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :   12 : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
@@ -39,13 +48,28 @@
         Key  : Dimen : Domain : Size : Members
         None :     1 :    Any :   12 : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
 
-1 Param Declarations
+4 Param Declarations
     bus_pd_max : Size=4, Index=bus_pd_max_index, Domain=Any, Default=None, Mutable=True
         Key : Value
           0 :   0.0
           1 :   1.0
           2 :   1.0
           3 :   1.0
+    ebranch_b_lin : Size=4, Index=ebranch_b_lin_index, Domain=Any, Default=None, Mutable=True
+        Key : Value
+          0 :                  -50.0
+          1 :                  -25.0
+          2 :                  -25.0
+          3 : -0.0007957747154594768
+    ebranch_flow_max : Size=4, Index=ebranch_flow_max_index, Domain=Any, Default=None, Mutable=True
+        Key : Value
+          0 :                  2.0
+          1 :                  1.0
+          2 :                  1.0
+          3 : 0.011000000000000001
+    gen_pg_max : Size=1, Index=gen_pg_max_index, Domain=Any, Default=None, Mutable=True
+        Key : Value
+          0 :   3.0
 
 6 Var Declarations
     invT : Size=12, Index=invT_index
@@ -110,11 +134,11 @@
           2 : bus_pd_max[2] : - (pf[3] - pf[1] - pf[2]) - (xpf[9] + xpf[10] + xpf[11] - xpf[3] - xpf[4] - xpf[5] - xpf[6] - xpf[7] - xpf[8]) + sl[2] : bus_pd_max[2] :   True
           3 : bus_pd_max[3] :                                                                         pf[3] - (- xpf[9] - xpf[10] - xpf[11]) + sl[3] : bus_pd_max[3] :   True
     con_power_flow : Size=4, Index=con_power_flow_index, Active=True
-        Key : Lower : Body                                          : Upper : Active
-          0 :   0.0 :                  pf[0] - 50.0*(th[0] - th[1]) :   0.0 :   True
-          1 :   0.0 :                  pf[1] - 25.0*(th[0] - th[2]) :   0.0 :   True
-          2 :   0.0 :                  pf[2] - 25.0*(th[1] - th[2]) :   0.0 :   True
-          3 :   0.0 : pf[3] - 0.0007957747154594768*(th[2] - th[3]) :   0.0 :   True
+        Key : Lower : Body                                     : Upper : Active
+          0 :   0.0 : pf[0] + ebranch_b_lin[0]*(th[0] - th[1]) :   0.0 :   True
+          1 :   0.0 : pf[1] + ebranch_b_lin[1]*(th[0] - th[2]) :   0.0 :   True
+          2 :   0.0 : pf[2] + ebranch_b_lin[2]*(th[1] - th[2]) :   0.0 :   True
+          3 :   0.0 : pf[3] + ebranch_b_lin[3]*(th[2] - th[3]) :   0.0 :   True
     con_power_xflow_disj_neg : Size=12, Index=con_power_xflow_disj_neg_index, Active=True
         Key : Lower : Body                                                              : Upper : Active
           0 :  -Inf :   xpf[0] - 25.0*(th[0] - th[1]) - 314.1592653589793*(1 - invT[0]) :   0.0 :   True
@@ -172,4 +196,4 @@
          10 :  -Inf : xpf[10] - invT[10] :   0.0 :   True
          11 :  -Inf : xpf[11] - invT[11] :   0.0 :   True
 
-27 Declarations: xpf_index xpf invT_index invT bus_pd_max_index bus_pd_max pg_index pg th_index th sl_index sl pf_index pf obj con_power_balance_index con_power_balance con_power_flow_index con_power_flow con_power_xflow_disj_pos_index con_power_xflow_disj_pos con_power_xflow_disj_neg_index con_power_xflow_disj_neg con_power_xflow_pos_index con_power_xflow_pos con_power_xflow_neg_index con_power_xflow_neg
+33 Declarations: xpf_index xpf invT_index invT bus_pd_max_index bus_pd_max ebranch_flow_max_index ebranch_flow_max ebranch_b_lin_index ebranch_b_lin gen_pg_max_index gen_pg_max pg_index pg th_index th sl_index sl pf_index pf obj con_power_balance_index con_power_balance con_power_flow_index con_power_flow con_power_xflow_disj_pos_index con_power_xflow_disj_pos con_power_xflow_disj_neg_index con_power_xflow_disj_neg con_power_xflow_pos_index con_power_xflow_pos con_power_xflow_neg_index con_power_xflow_neg

@@ -2,8 +2,9 @@ import unittest
 import numpy as np
 from opf_basic import main_opf_basic
 from opf_basic_losses import main_opf_basic_losses
-from opf_sce import main_opf_basic_sce
+from opf_sce import main_opf_sce
 from tep_basic import main_tep_basic
+from opf_monte_carlo import main_opf_monte_carlo
 
 
 class TestAll(unittest.TestCase):
@@ -23,13 +24,19 @@ class TestAll(unittest.TestCase):
         data_file = "source/tests/data/MATPOWER/case3.m"
         results = np.load("source/tests/results/res_OPFBasic_sce_case3.npy",allow_pickle=True).tolist()
         sce_file = "source/tests/data/scenarios/load_test.csv"
-        numpy_assert_almost_dict_values(main_opf_basic_sce(data_file=data_file, sce_file=sce_file), results)
+        numpy_assert_almost_dict_values(main_opf_sce(data_file=data_file, sce_file=sce_file), results)
 
     
     def test_TEPBasic(self):
         data_file = "source/tests/data/MATPOWER/case3.m"
         results = np.load("source/tests/results/res_TEPBasic_case3.npy",allow_pickle=True).tolist()
         numpy_assert_almost_dict_values(main_tep_basic(data_file=data_file), results)
+
+    # @unittest.skip("Under implementation")
+    def test_OPFMonteCarlo(self):
+        data_file = "source/tests/data/MATPOWER/case24_ieee_rts_reliability.m"
+        results = np.load("source/tests/results/res_OPFMonteCarlo_case24_ieee_rts_reliability.npy",allow_pickle=True).tolist()
+        numpy_assert_almost_dict_values(main_opf_monte_carlo(data_file=data_file), results)
 
         
 def dic_to_keys_values(dic):
