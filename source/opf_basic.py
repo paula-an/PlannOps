@@ -168,7 +168,8 @@ class OPFBasic(OptimizationProblem):
             np.save(name_file_test, self.results)
 
 def main_opf_basic(data_file: str, name_file_test: str=None) -> None:
-    system_data = read_from_MATPOWER(data_file)
+    #system_data = read_from_MATPOWER(data_file)
+    system_data = ReadSystemsFiles(data_file)
     psd = PowerSystemData(system_data=system_data)
     op = OPFBasic(psd)
     op.define_model(debug=True)
@@ -178,6 +179,7 @@ def main_opf_basic(data_file: str, name_file_test: str=None) -> None:
 
 if __name__ == "__main__":
     data_file = "source/data/matpower/case3_Basics.m"
+    # data_file = "source/data/anarede/SIST5BARRAS.PWF"
     
     is_for_testing = False
     if is_for_testing:
