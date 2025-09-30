@@ -8,6 +8,7 @@ import numpy as np
 from basics.printing import print_centered_text, int_format, float_format, table_format, pyo_extract
 import sys
 from basics.read_systems_files import ReadSystemsFiles
+from pathlib import Path
 
 class OPFBasic(OptimizationProblem):
 
@@ -50,7 +51,8 @@ class OPFBasic(OptimizationProblem):
                 self.model.pprint(ostream=file)
     
     def solve_model(self) -> None:
-        solver = pyo.SolverFactory('glpk')
+        # solver = pyo.SolverFactory('glpk')
+        solver = pyo.SolverFactory('ipopt', executable=Path.cwd() / ".venv/bin/ipopt")
         solver.solve(self.model)
     
     def _bounds_pf(self, _, k: int) -> tuple:
